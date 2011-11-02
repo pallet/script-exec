@@ -1,8 +1,8 @@
 (ns pallet.transport.local-test
   (:require
+   [pallet.common.filesystem :as filesystem]
    [pallet.transport :as transport]
-   [pallet.transport.local :as local]
-   [pallet.utils :as utils])
+   [pallet.transport.local :as local])
   (:use
    clojure.test))
 
@@ -39,16 +39,16 @@
   (let [transport (local/make-local-transport)
         t-state (transport/open transport nil nil nil)]
     (testing "send"
-      (utils/with-temp-file [tmp-src "src"]
-        (utils/with-temp-file [tmp-dest "dest"]
+      (filesystem/with-temp-file [tmp-src "src"]
+        (filesystem/with-temp-file [tmp-dest "dest"]
           (transport/send t-state (.getPath tmp-src) (.getPath tmp-dest))
           (is (= "src" (slurp tmp-dest))))))
     (testing "send-str"
-      (utils/with-temp-file [tmp-dest "dest"]
+      (filesystem/with-temp-file [tmp-dest "dest"]
         (transport/send-str t-state "src" (.getPath tmp-dest))
         (is (= "src" (slurp tmp-dest)))))
     (testing "receive"
-      (utils/with-temp-file [tmp-src "src"]
-        (utils/with-temp-file [tmp-dest "dest"]
+      (filesystem/with-temp-file [tmp-src "src"]
+        (filesystem/with-temp-file [tmp-dest "dest"]
           (transport/receive t-state (.getPath tmp-src) (.getPath tmp-dest))
           (is (= "src" (slurp tmp-dest))))))))

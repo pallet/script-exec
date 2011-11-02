@@ -1,13 +1,23 @@
 (ns pallet.transport.ssh-test
   (:require
+   [pallet.common.filesystem :as filesystem]
    [pallet.common.logging.logutils :as logutils]
    [pallet.transport :as transport]
-   [pallet.transport.ssh :as ssh]
-   [pallet.utils :as utils])
+   [pallet.transport.ssh :as ssh])
   (:use
    clojure.test))
 
 (use-fixtures :once (logutils/logging-threshold-fixture))
+
+(defn default-private-key-path
+  "Return the default private key path."
+  []
+  (str (System/getProperty "user.home") "/.ssh/id_rsa"))
+
+(defn default-public-key-path
+  "Return the default public key path"
+  []
+  (str (System/getProperty "user.home") "/.ssh/id_rsa.pub"))
 
 (defn test-username
   "Function to get test username. This is a function to avoid issues with AOT."
@@ -19,8 +29,10 @@
         t-state (transport/open
                  transport
                  {:server "localhost"}
-                 {:user (assoc utils/*admin-user*
-                          :username (test-username) :no-sudo true)}
+                 {:user {:private-key-path (default-private-key-path)
+                         :public-key-path (default-public-key-path)
+                         :username (test-username)
+                         :no-sudo true}}
                  nil)]
     (testing "Default shell"
       (let [result (transport/exec t-state {:in "ls /; exit $?"} nil)]
@@ -49,20 +61,22 @@
         t-state (transport/open
                  transport
                  {:server "localhost"}
-                 {:user (assoc utils/*admin-user*
-                          :username (test-username) :no-sudo true)}
+                 {:user {:private-key-path (default-private-key-path)
+                         :public-key-path (default-public-key-path)
+                         :username (test-username)
+                         :no-sudo true}}
                  nil)]
     (testing "send"
-      (utils/with-temp-file [tmp-src "src"]
-        (utils/with-temp-file [tmp-dest "dest"]
+      (filesystem/with-temp-file [tmp-src "src"]
+        (filesystem/with-temp-file [tmp-dest "dest"]
           (transport/send t-state (.getPath tmp-src) (.getPath tmp-dest))
           (is (= "src" (slurp tmp-dest))))))
     (testing "send-str"
-      (utils/with-temp-file [tmp-dest "dest"]
+      (filesystem/with-temp-file [tmp-dest "dest"]
         (transport/send-str t-state "src" (.getPath tmp-dest))
         (is (= "src" (slurp tmp-dest)))))
     (testing "receive"
-      (utils/with-temp-file [tmp-src "src"]
-        (utils/with-temp-file [tmp-dest "dest"]
+      (filesystem/with-temp-file [tmp-src "src"]
+        (filesystem/with-temp-file [tmp-dest "dest"]
           (transport/receive t-state (.getPath tmp-src) (.getPath tmp-dest))
           (is (= "src" (slurp tmp-dest))))))))
