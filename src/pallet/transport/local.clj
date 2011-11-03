@@ -92,3 +92,7 @@
 (defn make-local-transport
   []
   (LocalTransport.))
+
+(defmethod transport/factory :local
+  [_ options]
+  (make-local-transport))

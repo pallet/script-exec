@@ -31,8 +31,7 @@
                  {:server "localhost"}
                  {:user {:private-key-path (default-private-key-path)
                          :public-key-path (default-public-key-path)
-                         :username (test-username)
-                         :no-sudo true}}
+                         :username (test-username)}}
                  nil)]
     (testing "Default shell"
       (let [result (transport/exec t-state {:in "ls /; exit $?"} nil)]
@@ -63,8 +62,7 @@
                  {:server "localhost"}
                  {:user {:private-key-path (default-private-key-path)
                          :public-key-path (default-public-key-path)
-                         :username (test-username)
-                         :no-sudo true}}
+                         :username (test-username)}}
                  nil)]
     (testing "send"
       (filesystem/with-temp-file [tmp-src "src"]

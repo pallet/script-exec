@@ -95,3 +95,5 @@ Connections can be expensive, so need to be cached and be poolable."
          (transport/forward-to-local transport-state# rport# lport#))
        ~@body
        (finally (unforward#)))))
+
+(defmulti factory (fn [transport-kw options] transport-kw))

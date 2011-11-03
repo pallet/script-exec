@@ -257,3 +257,7 @@
   [{:keys [limit] :or {limit 20}}]
   (SshTransport.
    (cache/make-fifo-cache :limit limit :expire-f transport/close)))
+
+(defmethod transport/factory :ssh
+  [_ options]
+  (make-ssh-transport options))
