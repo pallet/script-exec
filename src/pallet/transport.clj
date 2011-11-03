@@ -20,6 +20,8 @@ Connections can be expensive, so need to be cached and be poolable."
      transport state objects."))
 
 (defprotocol TransportState
+  "Represents the state of a transport's communication with an endpoint
+   and given authentication."
   (open? [transport-state]
     "Predicate for testing if the given transport state is open. For a
      connection based protocol, this would mean it was connected. For a
@@ -30,7 +32,7 @@ Connections can be expensive, so need to be cached and be poolable."
     "Release any resources associated with state."))
 
 (defprotocol Transfer
-  "A transport needs to be able to transfer files"
+  "Transfer data over a transport."
   (send [transport-state source destination]
     "Send data from source file to destination file, using the transport
      state.")
@@ -55,7 +57,7 @@ Connections can be expensive, so need to be cached and be poolable."
      It returns a map with :exit and :out keys."))
 
 (defprotocol PortForward
-  "Execute code over the transport."
+  "Forward a port over a transport."
   (forward-to-local [transport-state remote-port local-port]
     "Map the target's remote-port to the given local-port")
   (unforward-to-local [transport-state remote-port local-port]
@@ -97,6 +99,9 @@ Connections can be expensive, so need to be cached and be poolable."
        (finally (unforward#)))))
 
 (defmacro with-transport
+  "Define a scope where the given name is bound to a transport.
+   The close-transport function is called on the transport on exit from the
+   scope."
   [[name transport] & body]
   `(let [~name ~transport]
      (try

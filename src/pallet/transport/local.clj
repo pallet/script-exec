@@ -39,7 +39,7 @@
    Options:
      :output-f  function to incrementally process output"
   [{:keys [execv in] :as command}
-   {:keys [filter-f output-f] :or {filter-f identity} :as options}]
+   {:keys [output-f] :as options}]
   (logging/tracef "sh-script %s" command)
   (if output-f
     (try
