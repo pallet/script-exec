@@ -96,4 +96,11 @@ Connections can be expensive, so need to be cached and be poolable."
        ~@body
        (finally (unforward#)))))
 
+(defmacro with-transport
+  [[name transport] & body]
+  `(let [~name ~transport]
+     (try
+       ~@body
+       (finally (close-transport ~name)))))
+
 (defmulti factory (fn [transport-kw options] transport-kw))

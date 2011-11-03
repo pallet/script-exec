@@ -30,14 +30,14 @@
   "Middleware to user the session :user credentials for SSH authentication."
   [authentication]
   (let [user (:user authentication)]
-    (logging/infof
-     "SSH user %s %s" (:username user) (:private-key-path user))
+    (logging/infof "SSH user %s %s" (:username user) (:private-key-path user))
     (possibly-add-identity
      (default-agent) (:private-key-path user) (:passphrase user))))
 
 (defn connect-ssh-session
   [ssh-session endpoint authentication]
   (when-not (ssh/connected? ssh-session)
+    (logging/debugf "SSH connecting %s" endpoint)
     (try
       (ssh/connect ssh-session)
       (catch Exception e
@@ -93,10 +93,13 @@
 
 (defn close
   "Close any ssh connection to the server specified in the session."
-  [{:keys [ssh-session sftp-channel] :as state}]
+  [{:keys [ssh-session sftp-channel endpoint] :as state}]
+  (logging/debugf "SSH close %s" endpoint)
   (when sftp-channel
+    (logging/debugf "SSH disconnect SFTP %s" endpoint)
     (ssh/disconnect sftp-channel))
   (when ssh-session
+    (logging/debugf "SSH disconnect SSH %s" endpoint)
     (ssh/disconnect ssh-session))
   state)
 
@@ -238,19 +241,27 @@
   (unforward-to-local [transport-state remote-port local-port]
     (unforward-to-local transport-state remote-port local-port)))
 
+(defn lookup-or-create-state
+  [cache endpoint authentication options]
+  (or
+   (get cache [endpoint authentication options])
+   (let [state (SshTransportState. (connect endpoint authentication options))]
+     (logging/debugf "Create ssh transport state: %s" endpoint)
+     (cache/miss cache [endpoint authentication options] state)
+     state)))
+
+(defn open [cache endpoint authentication options]
+  (ssh-user-credentials authentication)
+  (lookup-or-create-state cache endpoint authentication options))
+
 (deftype SshTransport [connection-cache]
   transport/Transport
   (connection-based? [_]
     true)
   (open [_ endpoint authentication options]
-    (ssh-user-credentials authentication)
-    (or
-     (get connection-cache [endpoint authentication options])
-     (let [state (SshTransportState.
-                  (connect endpoint authentication options))]
-       (cache/miss connection-cache [endpoint authentication options] state)
-       state)))
+    (open connection-cache endpoint authentication options))
   (close-transport [_]
+    (logging/debug "SSH close-transport")
     (cache/expire-all connection-cache)))
 
 (defn make-ssh-transport

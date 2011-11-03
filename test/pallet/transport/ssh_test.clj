@@ -25,56 +25,56 @@
          (. System getProperty "user.name")))
 
 (deftest exec-test
-  (let [transport (ssh/make-ssh-transport {})
-        t-state (transport/open
-                 transport
-                 {:server "localhost"}
-                 {:user {:private-key-path (default-private-key-path)
-                         :public-key-path (default-public-key-path)
-                         :username (test-username)}}
-                 nil)]
-    (testing "Default shell"
-      (let [result (transport/exec t-state {:in "ls /; exit $?"} nil)]
-        (is (zero? (:exit result)))
-        (is (re-find #"bin" (:out result)))))
-    (testing "Explicit program"
-      (let [result (transport/exec t-state {:execv ["/bin/ls" "/"]} nil)]
-        (is (zero? (:exit result)))
-        (is (re-find #"bin" (:out result)))))
-    (testing "output-f"
-      (let [output (atom "")
-            result (transport/exec
-                    t-state
-                    {:in "/bin/ls /; exit $?"}
-                    {:output-f (partial swap! output str)})]
-        (is (zero? (:exit result)))
-        (is (re-find #"bin" (:out result)))
-        (is (= (:out result) @output))))
-    (testing "Error return"
-      (logutils/suppress-logging
-       (let [result (transport/exec t-state {:in "this-should-fail"} nil)]
-         (is (not (zero? (:exit result)))))))))
+  (transport/with-transport [transport (ssh/make-ssh-transport {})]
+    (let [t-state (transport/open
+                   transport
+                   {:server "localhost"}
+                   {:user {:private-key-path (default-private-key-path)
+                           :public-key-path (default-public-key-path)
+                           :username (test-username)}}
+                   nil)]
+      (testing "Default shell"
+        (let [result (transport/exec t-state {:in "ls /; exit $?"} nil)]
+          (is (zero? (:exit result)))
+          (is (re-find #"bin" (:out result)))))
+      (testing "Explicit program"
+        (let [result (transport/exec t-state {:execv ["/bin/ls" "/"]} nil)]
+          (is (zero? (:exit result)))
+          (is (re-find #"bin" (:out result)))))
+      (testing "output-f"
+        (let [output (atom "")
+              result (transport/exec
+                      t-state
+                      {:in "/bin/ls /; exit $?"}
+                      {:output-f (partial swap! output str)})]
+          (is (zero? (:exit result)))
+          (is (re-find #"bin" (:out result)))
+          (is (= (:out result) @output))))
+      (testing "Error return"
+        (logutils/suppress-logging
+         (let [result (transport/exec t-state {:in "this-should-fail"} nil)]
+           (is (not (zero? (:exit result))))))))))
 
 (deftest send-test
-  (let [transport (ssh/make-ssh-transport {})
-        t-state (transport/open
-                 transport
-                 {:server "localhost"}
-                 {:user {:private-key-path (default-private-key-path)
-                         :public-key-path (default-public-key-path)
-                         :username (test-username)}}
-                 nil)]
-    (testing "send"
-      (filesystem/with-temp-file [tmp-src "src"]
+  (transport/with-transport [transport (ssh/make-ssh-transport {})]
+    (let [t-state (transport/open
+                   transport
+                   {:server "localhost"}
+                   {:user {:private-key-path (default-private-key-path)
+                           :public-key-path (default-public-key-path)
+                           :username (test-username)}}
+                   nil)]
+      (testing "send"
+        (filesystem/with-temp-file [tmp-src "src"]
+          (filesystem/with-temp-file [tmp-dest "dest"]
+            (transport/send t-state (.getPath tmp-src) (.getPath tmp-dest))
+            (is (= "src" (slurp tmp-dest))))))
+      (testing "send-str"
         (filesystem/with-temp-file [tmp-dest "dest"]
-          (transport/send t-state (.getPath tmp-src) (.getPath tmp-dest))
-          (is (= "src" (slurp tmp-dest))))))
-    (testing "send-str"
-      (filesystem/with-temp-file [tmp-dest "dest"]
-        (transport/send-str t-state "src" (.getPath tmp-dest))
-        (is (= "src" (slurp tmp-dest)))))
-    (testing "receive"
-      (filesystem/with-temp-file [tmp-src "src"]
-        (filesystem/with-temp-file [tmp-dest "dest"]
-          (transport/receive t-state (.getPath tmp-src) (.getPath tmp-dest))
-          (is (= "src" (slurp tmp-dest))))))))
+          (transport/send-str t-state "src" (.getPath tmp-dest))
+          (is (= "src" (slurp tmp-dest)))))
+      (testing "receive"
+        (filesystem/with-temp-file [tmp-src "src"]
+          (filesystem/with-temp-file [tmp-dest "dest"]
+            (transport/receive t-state (.getPath tmp-src) (.getPath tmp-dest))
+            (is (= "src" (slurp tmp-dest)))))))))

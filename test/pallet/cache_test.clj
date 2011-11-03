@@ -61,3 +61,24 @@
       (is (not (impl/has? fifo :c)))
       (is (not (impl/has? fifo :d)))
       (is (= 0 (count fifo))))))
+
+(deftest expire-all-test
+  (let [a (atom 0)
+        fifo (cache/make-fifo-cache :limit 3 :expire-f (fn [_] (swap! a inc)))]
+    (testing "Expire"
+      (cache/miss fifo :a 1)
+      (cache/expire-all fifo)
+      (is (= 1 @a))
+      (is (= 0 (count fifo)))
+      (cache/miss fifo :a 1)
+      (cache/miss fifo :b 2)
+      (cache/miss fifo :c 3)
+      (is (= 1 @a))
+      (cache/miss fifo :d 4)
+      (is (= 2 @a))
+      (cache/expire-all fifo)
+      (is (= 5 @a))))
+  (let [fifo (cache/make-fifo-cache :limit 3 :expire-f (fn [x] (is (= x ::x))))]
+    (testing "Expire-f"
+      (cache/miss fifo :a ::x)
+      (cache/expire-all fifo))))

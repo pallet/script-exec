@@ -58,12 +58,14 @@
   CacheProtocol
   (miss
    [_ item result]
-   (let [[k v] (dosync
-                (let [k (peek @queue)
-                      v (get @cache k)]
-                  (alter cache #(-> % (dissoc k) (assoc item result)))
-                  (alter queue #(-> % pop (conj item)))))]
-     (when (and expire-f (not= ::free k))
+   (let [[not-free? v] (dosync
+                        (let [k (peek @queue)
+                              not-free? (not= ::free k)
+                              v (when not-free? (get @cache k))]
+                          (alter cache #(-> % (dissoc k) (assoc item result)))
+                          (alter queue #(-> % pop (conj item)))
+                          [not-free? v]))]
+     (when (and expire-f not-free?)
        (expire-f v))
      nil))
 
@@ -72,19 +74,17 @@
   (expire-all
    [_]
    (let [c (dosync
-             (let [c @cache]
-               (alter
-                queue
-                (constantly
-                 (into clojure.lang.PersistentQueue/EMPTY
-                       (repeat limit ::free))))
-               (alter cache (constantly {}))
-               c))]
+            (let [c @cache]
+              (alter
+               queue
+               (constantly
+                (into clojure.lang.PersistentQueue/EMPTY
+                      (repeat limit ::free))))
+              (alter cache (constantly {}))
+              c))]
      (when expire-f
-       (->> c
-            (remove (comp (partial = ::free) key))
-            (map second)
-            (map expire-f)))
+       (doseq [[_ v] c]
+         (expire-f v)))
      nil))
 
   (expire
@@ -95,8 +95,8 @@
                 (alter
                  queue
                  (fn [q]
-                  (into clojure.lang.PersistentQueue/EMPTY
-                        (conj (remove (partial = item) q) ::free))))
+                   (into clojure.lang.PersistentQueue/EMPTY
+                         (conj (remove (partial = item) q) ::free))))
                 (alter cache dissoc item))
               v))]
      (when (and expire-f (not= v ::miss))
