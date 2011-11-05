@@ -107,15 +107,7 @@
   [{:keys [sftp-channel] :as state} source destination]
   (ssh/sftp
    sftp-channel
-   :put (io/input-stream (io/file source))
-   destination
-   :return-map true))
-
-(defn send-str
-  [{:keys [sftp-channel] :as state} source destination]
-  (ssh/sftp
-   sftp-channel
-   :put (java.io.ByteArrayInputStream. (.getBytes source))
+   :put source
    destination
    :return-map true))
 
@@ -145,9 +137,7 @@
                           ssh/ssh
                           ssh-session
                           (concat
-                           (when-let [execv (seq execv)]
-                             [(apply
-                              str (interpose " " (map str execv)))])
+                           execv
                            [:in in :return-map true
                             :pty (:pty options true) :out :stream]))
           sb (StringBuilder.)
@@ -228,8 +218,6 @@
   transport/Transfer
   (send [_ source destination]
     (send state source destination))
-  (send-str [_ source destination]
-    (send-str state source destination))
   (receive [_ source destination]
     (receive state source destination))
   transport/Exec

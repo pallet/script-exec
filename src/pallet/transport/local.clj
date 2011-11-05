@@ -74,8 +74,6 @@
   (close [_])
   transport/Transfer
   (send [_ source destination]
-    (io/copy (io/file source) (io/file destination)))
-  (send-str [_ source destination]
     (io/copy source (io/file destination)))
   (receive [_ source destination]
     (io/copy (io/file source) (io/file destination)))

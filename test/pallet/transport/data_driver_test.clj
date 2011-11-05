@@ -1,9 +1,12 @@
 (ns pallet.transport.data-driver-test
   (:require
+   [pallet.common.logging.logutils :as logutils]
    [pallet.transport.data-driver :as data-driver]
    [pallet.transport.ssh-test :as ssh-test])
   (:use
    clojure.test))
+
+(use-fixtures :once (logutils/logging-threshold-fixture))
 
 (deftest data-driver-test
   (let [{:keys [exit out]} (data-driver/exec

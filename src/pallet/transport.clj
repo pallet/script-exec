@@ -1,6 +1,8 @@
 (ns pallet.transport
   "A transport provides file transfer and execution facilities"
-  (:refer-clojure :exclude [send]))
+  (:refer-clojure :exclude [send])
+  (:require
+   [clojure.java.io :as io]))
 
 (defprotocol Transport
   "A transport can be message or connection based.
@@ -33,15 +35,26 @@ Connections can be expensive, so need to be cached and be poolable."
 
 (defprotocol Transfer
   "Transfer data over a transport."
-  (send [transport-state source destination]
-    "Send data from source file to destination file, using the transport
-     state.")
-  (send-str [transport-state source destination]
-    "Send string data from source to destination file, using the transport
+  (send [transport-state input-stream destination]
+    "Send data from source input-stream to destination file, using the transport
      state.")
   (receive [transport-state source destination]
-    "Receive data from source and store in destination, using the transport
-     state."))
+    "Receive data from source file path  and store in destination file path
+     using the transport state."))
+
+(defn send-text
+  [transport-state text destination]
+  (send
+   transport-state
+   (java.io.ByteArrayInputStream. (.getBytes text))
+   destination))
+
+(defn send-file
+  [transport-state filepath destination]
+  (send
+   transport-state
+   (io/input-stream (io/file filepath))
+   destination))
 
 (defprotocol Exec
   "Execute code over the transport."
