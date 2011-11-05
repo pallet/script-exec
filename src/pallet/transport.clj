@@ -2,7 +2,8 @@
   "A transport provides file transfer and execution facilities"
   (:refer-clojure :exclude [send])
   (:require
-   [clojure.java.io :as io]))
+   [clojure.java.io :as io]
+   [pallet.common.context :as context]))
 
 (defprotocol Transport
   "A transport can be message or connection based.
@@ -44,17 +45,18 @@ Connections can be expensive, so need to be cached and be poolable."
 
 (defn send-text
   [transport-state text destination]
-  (send
-   transport-state
-   (java.io.ByteArrayInputStream. (.getBytes text))
-   destination))
+  (context/with-context
+    (format "Send text %s to %s" text destination) {}
+    (send
+     transport-state
+     (java.io.ByteArrayInputStream. (.getBytes text))
+     destination)))
 
 (defn send-file
   [transport-state filepath destination]
-  (send
-   transport-state
-   (io/input-stream (io/file filepath))
-   destination))
+  (context/with-context
+    (format "Send file %s to %s" filepath destination) {}
+    (send transport-state (io/input-stream (io/file filepath)) destination)))
 
 (defprotocol Exec
   "Execute code over the transport."

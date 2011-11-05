@@ -40,3 +40,15 @@
            :public-key-path (default-public-key-path)
            :username (test-username)}}
    nil))
+
+(deftest connection-fail-test
+  (is
+   (thrown-with-msg?
+     slingshot.Stone #"SSH connect : server somewhere-non-existent"
+     (transport-test/test-connect-fail
+      (ssh/make-ssh-transport {})
+      {:server "somewhere-non-existent"}
+      {:user {:private-key-path (default-private-key-path)
+              :public-key-path (default-public-key-path)
+              :username (test-username)}}
+      nil))))

@@ -4,6 +4,7 @@
    [clojure.java.io :as io]
    [clojure.string :as string]
    [clojure.tools.logging :as logging]
+   [pallet.common.context :as context]
    [pallet.shell :as shell]
    [pallet.transport :as transport]))
 
@@ -74,12 +75,18 @@
   (close [_])
   transport/Transfer
   (send [_ source destination]
-    (io/copy source (io/file destination)))
+    (context/with-context
+      (format "Send to %s" destination) {}
+      (io/copy source (io/file destination))))
   (receive [_ source destination]
-    (io/copy (io/file source) (io/file destination)))
+    (context/with-context
+      (format "Receive to %s" destination) {}
+      (io/copy (io/file source) (io/file destination))))
   transport/Exec
   (exec [transport-state code options]
-    (sh-script code options)))
+    (context/with-context
+      "Execute script" {}
+      (sh-script code options))))
 
 (deftype LocalTransport []
   transport/Transport

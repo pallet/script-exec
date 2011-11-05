@@ -3,11 +3,11 @@
   (:refer-clojure :exclude [send])
   (:require
    [clj-ssh.ssh :as ssh]
-   [clojure.contrib.condition :as condition]
    [clojure.java.io :as io]
    [clojure.string :as string]
    [clojure.tools.logging :as logging]
    [pallet.cache :as cache]
+   [pallet.common.context :as context]
    [pallet.transport :as transport]))
 
 (defonce default-agent-atom (atom nil))
@@ -26,6 +26,15 @@
     (ssh/add-identity agent private-key-path passphrase)
     (ssh/add-identity-with-keychain agent private-key-path)))
 
+(defn- status-msg
+  [msg endpoint authentication]
+  (format
+   "%s : server %s, port %s, user %s"
+   msg
+   (:server endpoint)
+   (:port endpoint 22)
+   (-> authentication :user :username)))
+
 (defn ssh-user-credentials
   "Middleware to user the session :user credentials for SSH authentication."
   [authentication]
@@ -38,32 +47,20 @@
   [ssh-session endpoint authentication]
   (when-not (ssh/connected? ssh-session)
     (logging/debugf "SSH connecting %s" endpoint)
-    (try
-      (ssh/connect ssh-session)
-      (catch Exception e
-        (condition/raise
-         :type :pallet/ssh-connection-failure
-         :message (format
-                   "ssh-fail: server %s, port %s, user %s"
-                   (:server endpoint)
-                   (:port endpoint 22)
-                   (-> authentication :user :username))
-         :cause e)))))
+    (context/with-context
+      (status-msg "SSH connect" endpoint authentication)
+      {:exception-type :pallet/ssh-connection-failure
+       :exception-map {:endpoint endpoint :authentication authentication}}
+      (ssh/connect ssh-session))))
 
 (defn connect-sftp-channel
   [sftp-channel endpoint authentication]
   (when-not (ssh/connected? sftp-channel)
-      (try
-        (ssh/connect sftp-channel)
-        (catch Exception e
-          (condition/raise
-           :type :pallet/sftp-channel-failure
-           :message (format
-                     "ssh-fail: server %s, port %s, user %s"
-                     (:server endpoint)
-                     (:port endpoint 22)
-                     (-> authentication :user :username))
-           :cause e)))))
+    (context/with-context
+      (status-msg "SSH connect SFTP channel" endpoint authentication)
+      {:exception-type :pallet/sftp-channel-failure
+       :exception-map {:endpoint endpoint :authentication authentication}}
+      (ssh/connect sftp-channel))))
 
 (defn connect
   ([endpoint authentication options]
@@ -93,27 +90,43 @@
 
 (defn close
   "Close any ssh connection to the server specified in the session."
-  [{:keys [ssh-session sftp-channel endpoint] :as state}]
+  [{:keys [ssh-session sftp-channel endpoint authentication] :as state}]
   (logging/debugf "SSH close %s" endpoint)
-  (when sftp-channel
-    (logging/debugf "SSH disconnect SFTP %s" endpoint)
-    (ssh/disconnect sftp-channel))
-  (when ssh-session
-    (logging/debugf "SSH disconnect SSH %s" endpoint)
-    (ssh/disconnect ssh-session))
-  state)
+  (context/with-context
+    (status-msg "SSH close" endpoint authentication)
+    {:exception-type :pallet/ssh-close-failure
+     :exception-map {:endpoint endpoint :authentication authentication}}
+    (when sftp-channel
+      (logging/debugf "SSH disconnect SFTP %s" endpoint)
+      (ssh/disconnect sftp-channel))
+    (when ssh-session
+      (logging/debugf "SSH disconnect SSH %s" endpoint)
+      (ssh/disconnect ssh-session))
+    state))
 
 (defn send
-  [{:keys [sftp-channel] :as state} source destination]
-  (ssh/sftp
-   sftp-channel
-   :put source
-   destination
-   :return-map true))
+  [{:keys [sftp-channel endpoint authentication] :as state} source destination]
+  (context/with-context
+    (status-msg
+     (format "SSH SFTP send to %s" destination) endpoint authentication)
+    {:exception-type :pallet/sftp-send-failure
+     :exception-map {:endpoint endpoint :authentication authentication}}
+    (ssh/sftp
+     sftp-channel
+     :put source
+     destination
+     :return-map true)))
 
 (defn receive
-  [{:keys [sftp-channel] :as state} source destination]
-  (ssh/sftp sftp-channel :get source (io/output-stream (io/file destination))))
+  [{:keys [sftp-channel endpoint authentication] :as state} source destination]
+  (context/with-context
+    (status-msg
+     (format "SSH SFTP receive from %s to %s" source destination)
+     endpoint authentication)
+    {:exception-type :pallet/sftp-receive-failure
+     :exception-map {:endpoint endpoint :authentication authentication}}
+    (ssh/sftp
+     sftp-channel :get source (io/output-stream (io/file destination)))))
 
 (def
   ^{:doc "Specifies the buffer size used to read the ssh output stream.
