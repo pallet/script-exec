@@ -46,8 +46,7 @@
 (defn connect-ssh-session
   [ssh-session endpoint authentication]
   (when-not (ssh/connected? ssh-session)
-    (logging/debugf "SSH connecting %s" endpoint)
-    (context/with-context
+    (context/with-logged-context
       (status-msg "SSH connect" endpoint authentication)
       {:exception-type :pallet/ssh-connection-failure
        :exception-map {:endpoint endpoint :authentication authentication}}
@@ -56,7 +55,7 @@
 (defn connect-sftp-channel
   [sftp-channel endpoint authentication]
   (when-not (ssh/connected? sftp-channel)
-    (context/with-context
+    (context/with-logged-context
       (status-msg "SSH connect SFTP channel" endpoint authentication)
       {:exception-type :pallet/sftp-channel-failure
        :exception-map {:endpoint endpoint :authentication authentication}}
@@ -91,8 +90,7 @@
 (defn close
   "Close any ssh connection to the server specified in the session."
   [{:keys [ssh-session sftp-channel endpoint authentication] :as state}]
-  (logging/debugf "SSH close %s" endpoint)
-  (context/with-context
+  (context/with-logged-context
     (status-msg "SSH close" endpoint authentication)
     {:exception-type :pallet/ssh-close-failure
      :exception-map {:endpoint endpoint :authentication authentication}}
@@ -106,7 +104,7 @@
 
 (defn send
   [{:keys [sftp-channel endpoint authentication] :as state} source destination]
-  (context/with-context
+  (context/with-logged-context
     (status-msg
      (format "SSH SFTP send to %s" destination) endpoint authentication)
     {:exception-type :pallet/sftp-send-failure
@@ -119,7 +117,7 @@
 
 (defn receive
   [{:keys [sftp-channel endpoint authentication] :as state} source destination]
-  (context/with-context
+  (context/with-logged-context
     (status-msg
      (format "SSH SFTP receive from %s to %s" source destination)
      endpoint authentication)
