@@ -43,27 +43,29 @@ Connections can be expensive, so need to be cached and be poolable."
 
 (defprotocol Transfer
   "Transfer data over a transport."
-  (send [transport-state input-stream destination]
+  (send [transport-state input-stream destination {:keys [mode]}]
     "Send data from source input-stream to destination file, using the transport
-     state.")
+     state. Optionally set the mode of the destination file.")
   (receive [transport-state source destination]
     "Receive data from source file path  and store in destination file path
      using the transport state."))
 
 (defn send-text
-  [transport-state text destination]
+  [transport-state text destination {:keys [mode] :as options}]
   (context/with-context
     (format "Send text %s to %s" text destination) {}
     (send
      transport-state
      (java.io.ByteArrayInputStream. (.getBytes text))
-     destination)))
+     destination
+     options)))
 
 (defn send-file
-  [transport-state filepath destination]
+  [transport-state filepath destination {:keys [mode] :as options}]
   (context/with-context
     (format "Send file %s to %s" filepath destination) {}
-    (send transport-state (io/input-stream (io/file filepath)) destination)))
+    (send transport-state
+          (io/input-stream (io/file filepath)) destination options)))
 
 (defprotocol Exec
   "Execute code over the transport."

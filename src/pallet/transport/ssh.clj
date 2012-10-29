@@ -11,6 +11,7 @@
    [pallet.transport :as transport]
    [pallet.ssh.transport :as ssh-transport]))
 
+
 (deftype SshTransportState
     [state]
   transport/TransportState
@@ -26,8 +27,8 @@
   (authentication [_]
     (:authentication state))
   transport/Transfer
-  (send [_ source destination]
-    (ssh-transport/send-stream state source destination))
+  (send [_ source destination options]
+    (ssh-transport/send state source destination options))
   (receive [_ source destination]
     (ssh-transport/receive state source destination))
   transport/Exec

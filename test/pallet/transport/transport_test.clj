@@ -44,11 +44,12 @@
       (testing "send-file"
         (filesystem/with-temp-file [tmp-src "src"]
           (filesystem/with-temp-file [tmp-dest "dest"]
-            (transport/send-file t-state (.getPath tmp-src) (.getPath tmp-dest))
+            (transport/send-file
+             t-state (.getPath tmp-src) (.getPath tmp-dest) {})
             (is (= "src" (slurp tmp-dest))))))
       (testing "send-text"
         (filesystem/with-temp-file [tmp-dest "dest"]
-          (transport/send-text t-state "src" (.getPath tmp-dest))
+          (transport/send-text t-state "src" (.getPath tmp-dest) {})
           (is (= "src" (slurp tmp-dest)))))
       (testing "receive"
         (filesystem/with-temp-file [tmp-src "src"]
@@ -60,7 +61,7 @@
          (thrown-with-msg?
            slingshot.Stone #"No such file"
            (transport/send-file
-            t-state "/some/non-existing/path" "/invalid")))))))
+            t-state "/some/non-existing/path" "/invalid" {})))))))
 
 (defn test-connect-fail
   [transport endpoint authorisation options]

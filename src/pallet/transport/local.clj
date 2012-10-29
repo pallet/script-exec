@@ -15,8 +15,8 @@
   (re-open [_])
   (close [_])
   transport/Transfer
-  (send [_ source destination]
-    (local/send-stream source destination))
+  (send [_ source destination options]
+    (local/send-stream source destination options))
   (receive [_ source destination]
     (local/send-stream (io/input-stream source) destination))
   transport/Exec
