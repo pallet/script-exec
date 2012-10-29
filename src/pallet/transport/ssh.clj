@@ -2,7 +2,6 @@
   "Pallet's ssh transport"
   (:refer-clojure :exclude [send])
   (:require
-   [clj-ssh.ssh :as ssh]
    [clojure.java.io :as io]
    [clojure.string :as string]
    [clojure.tools.logging :as logging]
@@ -16,7 +15,7 @@
     [state]
   transport/TransportState
   (open? [_]
-    (ssh-transport/connected? (:ssh-session state)))
+    (ssh-transport/connected? state))
   (re-open [_]
     (ssh-transport/connect state))
   (close [_]
@@ -46,8 +45,9 @@
    (when-let [state (get cache [endpoint authentication options])]
      (when (transport/open? state)
        state
-       (do (connect state) state)))
-   (let [state (SshTransportState. (connect endpoint authentication options))]
+       (do (ssh-transport/connect state) state)))
+   (let [state (SshTransportState.
+                (ssh-transport/connect endpoint authentication options))]
      (logging/debugf "Create ssh transport state: %s" endpoint)
      (cache/miss cache [endpoint authentication options] state)
      state)))
