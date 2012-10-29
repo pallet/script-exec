@@ -54,7 +54,7 @@ Connections can be expensive, so need to be cached and be poolable."
   [transport-state text destination {:keys [mode] :as options}]
   (context/with-context
     (format "Send text %s to %s" text destination) {}
-    (send
+    (send-stream
      transport-state
      (java.io.ByteArrayInputStream. (.getBytes text))
      destination
@@ -64,8 +64,8 @@ Connections can be expensive, so need to be cached and be poolable."
   [transport-state filepath destination {:keys [mode] :as options}]
   (context/with-context
     (format "Send file %s to %s" filepath destination) {}
-    (send transport-state
-          (io/input-stream (io/file filepath)) destination options)))
+    (send-stream
+     transport-state (io/input-stream (io/file filepath)) destination options)))
 
 (defprotocol Exec
   "Execute code over the transport."

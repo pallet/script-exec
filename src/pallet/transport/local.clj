@@ -18,7 +18,7 @@
   (send-stream [_ source destination options]
     (local/send-stream source destination options))
   (receive [_ source destination]
-    (local/send-stream (io/input-stream source) destination))
+    (local/send-stream (io/input-stream source) destination {}))
   transport/Exec
   (exec [transport-state code options]
     (local/exec code options)))
