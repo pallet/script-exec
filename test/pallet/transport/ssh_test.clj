@@ -44,7 +44,7 @@
 (deftest connection-fail-test
   (is
    (thrown-with-msg?
-     slingshot.Stone #"SSH connect : server somewhere-non-existent"
+     Exception #"SSH connect : server somewhere-non-existent"
      (transport-test/test-connect-fail
       (ssh/make-ssh-transport {})
       {:server "somewhere-non-existent"}

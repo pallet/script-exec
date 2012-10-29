@@ -59,7 +59,7 @@
       (testing "send-file with non-existing path"
         (is
          (thrown-with-msg?
-           slingshot.Stone #"No such file"
+           Exception #"No such file"
            (transport/send-file
             t-state "/some/non-existing/path" "/invalid" {})))))))
 
