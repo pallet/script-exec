@@ -27,8 +27,8 @@
   (authentication [_]
     (:authentication state))
   transport/Transfer
-  (send [_ source destination options]
-    (ssh-transport/send state source destination options))
+  (send-stream [_ source destination options]
+    (ssh-transport/send-stream state source destination options))
   (receive [_ source destination]
     (ssh-transport/receive state source destination))
   transport/Exec

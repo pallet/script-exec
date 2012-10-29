@@ -43,9 +43,9 @@ Connections can be expensive, so need to be cached and be poolable."
 
 (defprotocol Transfer
   "Transfer data over a transport."
-  (send [transport-state input-stream destination {:keys [mode]}]
-    "Send data from source input-stream to destination file, using the transport
-     state. Optionally set the mode of the destination file.")
+  (send-stream [transport-state input-stream destination {:keys [mode]}]
+    "Send data from source input-stream or to destination file, using the
+     transport state. Optionally set the mode of the destination file.")
   (receive [transport-state source destination]
     "Receive data from source file path  and store in destination file path
      using the transport state."))
