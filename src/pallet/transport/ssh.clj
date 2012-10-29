@@ -20,6 +20,11 @@
     (ssh-transport/connect state))
   (close [_]
     (ssh-transport/close state))
+  transport/TransportEndpoint
+  (endpoint [_]
+    (:endpoint state))
+  (authentication [_]
+    (:authentication state))
   transport/Transfer
   (send [_ source destination]
     (ssh-transport/send-stream state source destination))

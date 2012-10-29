@@ -34,6 +34,13 @@ Connections can be expensive, so need to be cached and be poolable."
   (close [transport-state]
     "Release any resources associated with state."))
 
+(defprotocol TransportEndpoint
+  "Represents the endpoint referred to by a transport's state."
+  (endpoint [transport-state]
+    "The endpoint being communitcated with.")
+  (authentication [transport-state]
+    "Authenticatino being used"))
+
 (defprotocol Transfer
   "Transfer data over a transport."
   (send [transport-state input-stream destination]
