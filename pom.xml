@@ -19,8 +19,8 @@
   <inceptionYear>2010</inceptionYear>
 
   <scm>
-    <connection>scm:git:git://github.com/palletops/script-exec.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/palletops/script-exec.git</developerConnection>
+    <connection>scm:git:git://github.com/pallet/script-exec.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/pallet/script-exec.git</developerConnection>
     <url>http://github.com/palletops/script-exec</url>
   </scm>
 
@@ -64,12 +64,12 @@
     <dependency>
       <groupId>org.cloudhoist</groupId>
       <artifactId>ssh-transport</artifactId>
-      <version>0.2.0-SNAPSHOT</version>
+      <version>0.2.0</version>
     </dependency>
     <dependency>
       <groupId>org.cloudhoist</groupId>
       <artifactId>local-transport</artifactId>
-      <version>0.2.0-SNAPSHOT</version>
+      <version>0.2.0</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
