@@ -41,16 +41,17 @@
 
 (defn lookup-or-create-state
   [cache endpoint authentication options]
-  (or
-   (when-let [state (get cache [endpoint authentication options])]
-     (when (transport/open? state)
-       state
-       (do (ssh-transport/connect state) state)))
-   (let [state (SshTransportState.
-                (ssh-transport/connect endpoint authentication options))]
-     (logging/debugf "Create ssh transport state: %s" endpoint)
-     (cache/miss cache [endpoint authentication options] state)
-     state)))
+  (locking cache
+    (or
+     (when-let [state (get cache [endpoint authentication options])]
+       (when (transport/open? state)
+         state
+         (do (ssh-transport/connect state) state)))
+     (let [state (SshTransportState.
+                  (ssh-transport/connect endpoint authentication options))]
+       (logging/debugf "Create ssh transport state: %s" endpoint)
+       (cache/miss cache [endpoint authentication options] state)
+       state))))
 
 (defn open [cache endpoint authentication options]
   (ssh-transport/ssh-user-credentials authentication)
