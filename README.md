@@ -8,7 +8,7 @@ local and ssh transports.
 Add the following to your `:dependencies`:
 
 ```clj
-[org.cloudhoist/script-exec "0.1.0"]
+[org.cloudhoist/script-exec "0.1.1"]
 ```
 
 ## License
