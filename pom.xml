@@ -64,7 +64,7 @@
     <dependency>
       <groupId>org.cloudhoist</groupId>
       <artifactId>ssh-transport</artifactId>
-      <version>0.2.2</version>
+      <version>0.2.3-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.cloudhoist</groupId>
