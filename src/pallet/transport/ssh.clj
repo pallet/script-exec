@@ -44,7 +44,7 @@
   (locking cache
     (or
      (when-let [state (get cache [endpoint authentication options])]
-       (when (transport/open? state)
+       (if (transport/open? state)
          state
          (do
            (logging/debugf
