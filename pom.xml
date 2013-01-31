@@ -44,7 +44,7 @@
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>clojure</artifactId>
-      <version>1.2.1</version>
+      <version>1.4.0</version>
     </dependency>
     <dependency>
       <groupId>org.clojure</groupId>
@@ -52,29 +52,19 @@
       <version>0.1.2</version>
     </dependency>
     <dependency>
-      <groupId>slingshot</groupId>
-      <artifactId>slingshot</artifactId>
-      <version>0.10.3</version>
-    </dependency>
-    <dependency>
       <groupId>org.cloudhoist</groupId>
-      <artifactId>pallet-common</artifactId>
+      <artifactId>ssh-transport</artifactId>
       <version>0.3.0</version>
     </dependency>
     <dependency>
       <groupId>org.cloudhoist</groupId>
-      <artifactId>ssh-transport</artifactId>
-      <version>0.2.3-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>org.cloudhoist</groupId>
       <artifactId>local-transport</artifactId>
-      <version>0.2.0</version>
+      <version>0.3.0</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.0.1</version>
+      <version>1.0.9</version>
       <optional>true</optional>
       <scope>test</scope>
     </dependency>
