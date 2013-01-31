@@ -8,11 +8,11 @@ local and ssh transports.
 Add the following to your `:dependencies`:
 
 ```clj
-[org.cloudhoist/script-exec "0.1.2"]
+[org.cloudhoist/script-exec "0.2.0"]
 ```
 
 ## License
 
 Licensed under [EPL](http://www.eclipse.org/legal/epl-v10.html)
 
-Copyright 2011, 2012  Hugo Duncan.
+Copyright 2011, 2012, 2013  Hugo Duncan.

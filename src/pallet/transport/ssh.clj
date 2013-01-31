@@ -44,9 +44,14 @@
   (locking cache
     (or
      (when-let [state (get cache [endpoint authentication options])]
-       (when (transport/open? state)
+       (if (transport/open? state)
          state
-         (do (ssh-transport/connect state) state)))
+         (do
+           (logging/debugf
+            "lookup-or-create-state cache hit on closed session %s"
+            endpoint)
+           (ssh-transport/connect state)
+           state)))
      (let [state (SshTransportState.
                   (ssh-transport/connect endpoint authentication options))]
        (logging/debugf "Create ssh transport state: %s" endpoint)
