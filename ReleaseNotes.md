@@ -1,5 +1,14 @@
 # Release Notes
 
+## 0.2.0
+
+- Require clojure 1.4.0
+  Updates to latest ssh and local transports, and drops slingshot usage
+
+- Fix ssh connection caching
+
+- Add logging of cache hits on closed connections
+
 ## 0.1.2
 
 - Update to ssh-transport 0.2.2 to prevent trying to add nil keys to the agent
