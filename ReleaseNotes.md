@@ -1,5 +1,10 @@
 # Release Notes
 
+## 0.2.1
+
+- Update to ssh-transport 0.3.1
+  Fixes adding literal keys to ssh-agent.
+
 ## 0.2.0
 
 - Require clojure 1.4.0
