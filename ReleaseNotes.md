@@ -2,6 +2,10 @@
 
 ## 0.2.1
 
+- Update to ssh-transport 0.3.2
+
+## 0.2.1
+
 - Update to ssh-transport 0.3.1
   Fixes adding literal keys to ssh-agent.
 
