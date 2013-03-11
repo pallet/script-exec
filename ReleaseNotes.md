@@ -1,5 +1,12 @@
 # Release Notes
 
+## 0.3.0
+
+- Use lein as build tool
+  Also deploy to clojars with com.palletops group id.
+
+- Remove reflection warnings
+
 ## 0.2.1
 
 - Update to ssh-transport 0.3.2
