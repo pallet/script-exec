@@ -121,7 +121,7 @@
 
   ;; Java interfaces
   java.lang.Iterable
-  (iterator [this#] (.iterator @cache)))
+  (iterator [this#] (.iterator ^Iterable @cache)))
 
 (defn make-fifo-cache [& {:keys [cache queue limit expire-f]}]
   (FIFOCache.
