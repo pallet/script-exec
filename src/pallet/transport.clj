@@ -51,7 +51,7 @@ Connections can be expensive, so need to be cached and be poolable."
      using the transport state."))
 
 (defn send-text
-  [transport-state text destination {:keys [mode] :as options}]
+  [transport-state ^String text destination {:keys [mode] :as options}]
   (context/with-context
     (format "Send text %s to %s" text destination) {}
     (send-stream

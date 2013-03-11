@@ -44,7 +44,7 @@
 (deftest connection-fail-test
   (is
    (thrown-with-msg?
-     clojure.lang.ExceptionInfo #"SSH connect : server somewhere-non-existent"
+     clojure.lang.ExceptionInfo #"SSH connect: server somewhere-non-existent.*"
      (transport-test/test-connect-fail
       (ssh/make-ssh-transport {})
       {:server "somewhere-non-existent"}
