@@ -51,4 +51,4 @@
       {:user {:private-key-path (default-private-key-path)
               :public-key-path (default-public-key-path)
               :username (test-username)}}
-      nil))))
+      {:port-retries 2}))))
