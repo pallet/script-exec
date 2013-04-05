@@ -40,7 +40,7 @@
     (ssh-transport/unforward-to-local transport-state remote-port local-port)))
 
 (defn lookup-or-create-state
-  [cache endpoint authentication options]
+  [agent cache endpoint authentication options]
   (locking cache
     (or
      (when-let [state (get cache [endpoint authentication options])]
@@ -53,14 +53,16 @@
            (ssh-transport/connect state)
            state)))
      (let [state (SshTransportState.
-                  (ssh-transport/connect endpoint authentication options))]
+                  (ssh-transport/connect
+                   agent endpoint authentication options))]
        (logging/debugf "Create ssh transport state: %s" endpoint)
        (cache/miss cache [endpoint authentication options] state)
        state))))
 
 (defn open [cache endpoint authentication options]
-  (ssh-transport/ssh-user-credentials authentication)
-  (lookup-or-create-state cache endpoint authentication options))
+  (let [agent (ssh-transport/agent-for-authentication authentication)]
+    (ssh-transport/ssh-user-credentials agent authentication)
+    (lookup-or-create-state agent cache endpoint authentication options)))
 
 (deftype SshTransport [connection-cache]
   transport/Transport
