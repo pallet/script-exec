@@ -8,7 +8,7 @@ local and ssh transports.
 Add the following to your `:dependencies`:
 
 ```clj
-[com.palletops/script-exec "0.3.0"]
+[com.palletops/script-exec "0.3.1"]
 ```
 
 ## License
