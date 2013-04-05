@@ -1,5 +1,18 @@
 # Release Notes
 
+## 0.3.1
+
+- Reopen connection completely on cache miss
+  Jsch needs the connection re-opened from the Session up or it will fail 
+  with a "JschException: packet corrupt" exception.
+
+- Enable use of temporary ssh-agent
+  To avoid temporary keys being added to the system ssh-agent, use a local
+  agent when :temp-key is true.
+
+- Update to ssh-transport 0.4.1
+
+
 ## 0.3.0
 
 - Use lein as build tool
