@@ -1,5 +1,14 @@
 # Release Notes
 
+## 0.3.2
+
+- Add release function to the Transport protocol
+  The allows a transport to cleanup any resources associated with a
+  connection. The ssh transport uses this to evict a connection from the
+  cache.
+
+- Update to ssh-transport 0.4.2
+
 ## 0.3.1
 
 - Reopen connection completely on cache miss
