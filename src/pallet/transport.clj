@@ -15,9 +15,12 @@ Should be closeable to allow cleanup.
 Connections can be expensive, so need to be cached and be poolable."
   (connection-based? [transport]
     "Predicate for a connection based protocol")
-  (open [transport state] [transport endpoint authentication options]
+  (open [transport endpoint authentication options]
     "Returns a state object for the given endpoint and authentication maps.
      The returned state should (initially) satisfy open?")
+  (release [transport endpoint authentication options]
+    "Release any resources for the specified state or endpoint and
+     authentication maps.")
   (close-transport [_]
     "Release any resources held by the transport. Does not close any
      transport state objects."))
