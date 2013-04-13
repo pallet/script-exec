@@ -1,4 +1,4 @@
-(defproject com.palletops/script-exec "0.3.1"
+(defproject com.palletops/script-exec "0.3.2"
   :description "Functions for executing scripts locally."
   :url "http://palletops.com"
   :license {:name "Eclipse Public License"
@@ -6,4 +6,4 @@
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.logging "0.2.0"]
                  [com.palletops/local-transport "0.4.0"]
-                 [com.palletops/ssh-transport "0.4.1"]])
+                 [com.palletops/ssh-transport "0.4.2"]])

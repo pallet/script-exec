@@ -61,12 +61,18 @@
     (ssh-transport/ssh-user-credentials agent authentication)
     (lookup-or-create-state agent cache endpoint authentication options)))
 
+(defn release [cache endpoint authentication options]
+  (locking cache
+    (cache/expire cache [endpoint authentication options])))
+
 (deftype SshTransport [connection-cache]
   transport/Transport
   (connection-based? [_]
     true)
   (open [_ endpoint authentication options]
     (open connection-cache endpoint authentication options))
+  (release [_ endpoint authentication options]
+    (release connection-cache endpoint authentication options))
   (close-transport [_]
     (logging/debug "SSH close-transport")
     (cache/expire-all connection-cache)))
