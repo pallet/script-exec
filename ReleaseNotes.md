@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.3.3
+
+- Update to ssh-transport 0.4.3
+
 ## 0.3.2
 
 - Add release function to the Transport protocol
@@ -12,7 +16,7 @@
 ## 0.3.1
 
 - Reopen connection completely on cache miss
-  Jsch needs the connection re-opened from the Session up or it will fail 
+  Jsch needs the connection re-opened from the Session up or it will fail
   with a "JschException: packet corrupt" exception.
 
 - Enable use of temporary ssh-agent
