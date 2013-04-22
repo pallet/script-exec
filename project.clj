@@ -1,4 +1,4 @@
-(defproject com.palletops/script-exec "0.3.3"
+(defproject com.palletops/script-exec "0.3.4-SNAPSHOT"
   :description "Functions for executing scripts locally."
   :url "http://palletops.com"
   :license {:name "Eclipse Public License"
