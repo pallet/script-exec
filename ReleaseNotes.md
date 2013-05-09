@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.3.4
+
+- Update to ssh-transport 0.4.4
+
 ## 0.3.3
 
 - Update to ssh-transport 0.4.3
