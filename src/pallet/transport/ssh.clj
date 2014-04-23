@@ -5,82 +5,85 @@
    [clojure.java.io :as io]
    [clojure.string :as string]
    [clojure.tools.logging :as logging]
-   [pallet.cache :as cache]
+   [com.palletops.cache-resources :as cache]
    [pallet.common.context :as context]
    [pallet.transport :as transport]
+   [pallet.transport.protocols :as impl]
    [pallet.ssh.transport :as ssh-transport]))
-
 
 (deftype SshTransportState
     [state]
-  transport/TransportState
+  impl/TransportState
   (open? [_]
     (ssh-transport/connected? state))
   (re-open [_]
     (ssh-transport/connect state))
   (close [_]
     (ssh-transport/close state))
-  transport/TransportEndpoint
-  (endpoint [_]
-    (:endpoint state))
-  (authentication [_]
-    (:authentication state))
-  transport/Transfer
+  impl/Transfer
   (send-stream [_ source destination options]
     (ssh-transport/send-stream state source destination options))
   (receive [_ source destination]
     (ssh-transport/receive state source destination))
-  transport/Exec
+  impl/Exec
   (exec [transport-state code options]
     (ssh-transport/exec state code options))
-  transport/PortForward
+  impl/PortForward
   (forward-to-local [transport-state remote-port local-port]
     (ssh-transport/forward-to-local transport-state remote-port local-port))
   (unforward-to-local [transport-state remote-port local-port]
     (ssh-transport/unforward-to-local transport-state remote-port local-port)))
 
 (defn lookup-or-create-state
-  [agent cache endpoint authentication options]
-  (locking cache
-    (or
-     (when-let [state (get cache [endpoint authentication options])]
-       (if (transport/open? state)
-         state
-         (logging/debugf
-          "lookup-or-create-state cache hit on closed session %s"
-          endpoint)))
-     (let [state (SshTransportState.
-                  (ssh-transport/connect
-                   agent endpoint authentication options))]
-       (logging/debugf "Create ssh transport state: %s" endpoint)
-       (cache/miss cache [endpoint authentication options] state)
-       state))))
+  [cache target options]
+  (or
+   (when-let [state (cache/atomic-release cache [target options])]
+     ;; Remove the state from the cache, so it doesn't get expired.
+     ;; Note that there is a race here.
+     (if (impl/open? state)
+       state
+       (logging/debugf
+        "lookup-or-create-state cache hit on closed session %s"
+        (mapv
+         #(update-in % [:credentials] ssh-transport/obfuscate-credentials)
+         target))))
+   (do
+     (logging/debugf
+      "Create ssh transport state: %s"
+      (mapv
+       #(update-in % [:credentials] ssh-transport/obfuscate-credentials)
+       target))
+     (SshTransportState. (ssh-transport/open target options)))))
 
-(defn open [cache endpoint authentication options]
-  (let [agent (ssh-transport/agent-for-authentication authentication)]
-    (ssh-transport/ssh-user-credentials agent authentication)
-    (lookup-or-create-state agent cache endpoint authentication options)))
+(defn open [cache target options]
+  (lookup-or-create-state cache target options))
 
-(defn release [cache endpoint authentication options]
-  (locking cache
-    (cache/expire cache [endpoint authentication options])))
+(defn release [cache state]
+  (let [{:keys [target options]} (.state state)]
+    (logging/debugf
+     "Caching ssh transport state: %s"
+     (mapv
+      #(update-in % [:credentials] ssh-transport/obfuscate-credentials)
+      target))
+    (swap! cache assoc [target options] state)))
 
 (deftype SshTransport [connection-cache]
-  transport/Transport
+  impl/Transport
   (connection-based? [_]
     true)
-  (open [_ endpoint authentication options]
-    (open connection-cache endpoint authentication options))
-  (release [_ endpoint authentication options]
-    (release connection-cache endpoint authentication options))
+  (open [_ target options]
+    (open connection-cache target options))
+  (release [_ state]
+    (release connection-cache state))
   (close-transport [_]
     (logging/debug "SSH close-transport")
-    (cache/expire-all connection-cache)))
+    (empty connection-cache)))
 
 (defn make-ssh-transport
   [{:keys [limit] :or {limit 20}}]
   (SshTransport.
-   (cache/make-fifo-cache :limit limit :expire-f transport/close)))
+   (atom
+    (cache/fifo-cache-factory {} {:threshold limit :expire-f impl/close}))))
 
 (defmethod transport/factory :ssh
   [_ options]

@@ -3,92 +3,115 @@
   (:refer-clojure :exclude [send])
   (:require
    [clojure.java.io :as io]
-   [pallet.common.context :as context]))
+   [pallet.transport.protocols :as impl]))
 
-(defprotocol Transport
-  "A transport can be message or connection based.
-State is protocol dependent.
-Authentication is protocol dependent.
-Endpoint is protocol dependent.
-Options are protocol dependent.
-Should be closeable to allow cleanup.
-Connections can be expensive, so need to be cached and be poolable."
-  (connection-based? [transport]
-    "Predicate for a connection based protocol")
-  (open [transport endpoint authentication options]
-    "Returns a state object for the given endpoint and authentication maps.
-     The returned state should (initially) satisfy open?")
-  (release [transport endpoint authentication options]
-    "Release any resources for the specified state or endpoint and
-     authentication maps.")
-  (close-transport [_]
-    "Release any resources held by the transport. Does not close any
-     transport state objects."))
+;;; # Transport
+;;; A transport can be message or connection based.  State,
+;;; Target,  and Options are transport dependent.
+;;; Should be closeable to allow cleanup.  Connections may be
+;;; expensive, so may be cached and poolable.
 
-(defprotocol TransportState
-  "Represents the state of a transport's communication with an endpoint
-   and given authentication."
-  (open? [transport-state]
-    "Predicate for testing if the given transport state is open. For a
-     connection based protocol, this would mean it was connected. For a
-     message based protocol, that the endpoint is reachable.")
-  (re-open [transport-state]
-    "Re-opens the transport-state. The state will (initially) satisfy open?")
-  (close [transport-state]
-    "Release any resources associated with state."))
+(defn connection-based?
+ "Predicate for a connection based protocol"
+ [transport]
+ (impl/connection-based? transport))
 
-(defprotocol TransportEndpoint
-  "Represents the endpoint referred to by a transport's state."
-  (endpoint [transport-state]
-    "The endpoint being communitcated with.")
-  (authentication [transport-state]
-    "Authenticatino being used"))
+(defn open
+  "Returns a state object for the given target. The returned state
+  should (initially) satisfy open?."
+  [transport target options]
+  (impl/open transport target options))
 
-(defprotocol Transfer
-  "Transfer data over a transport."
-  (send-stream [transport-state input-stream destination {:keys [mode]}]
-    "Send data from source input-stream or to destination file, using the
-     transport state. Optionally set the mode of the destination file.")
-  (receive [transport-state source destination]
-    "Receive data from source file path  and store in destination file path
-     using the transport state."))
+(defn release
+  "Release any resources for the specified state.
+  This may still cache the resources."
+  [transport state]
+  (impl/release transport state))
+
+(defn close-transport
+  "Release any resources held by the transport. Does not close any
+  transport state objects."
+  [transport]
+  (impl/close-transport transport))
+
+;;; # Transport State
+
+;;; Represents the state of a transport's communication with an
+;;; endpoint and given authentication.
+(defn open?
+  "Predicate for testing if the given transport state is open. For a
+  connection based protocol, this would mean it was connected. For a
+  message based protocol, that the endpoint is reachable."
+  [transport-state]
+  (impl/open? transport-state))
+
+(defn re-open
+  "Re-opens the transport-state. The state will (initially) satisfy open?"
+  [transport-state]
+  (impl/re-open transport-state))
+
+(defn close
+  "Release any resources associated with transport-state."
+  [transport-state]
+  (impl/close transport-state))
+
+;;; # Transfers
+
+;;; Transfer data over a transport.
+(defn send-stream
+  "Send data from source input-stream or to destination file, using the
+  transport state. Optionally set the mode of the destination file."
+  [transport-state input-stream destination {:keys [mode] :as options}]
+  (impl/send-stream transport-state input-stream destination options))
 
 (defn send-text
+  "Send a string literal to a remote file."
   [transport-state ^String text destination {:keys [mode] :as options}]
-  (context/with-context
-    (format "Send text %s to %s" text destination) {}
-    (send-stream
-     transport-state
-     (java.io.ByteArrayInputStream. (.getBytes text))
-     destination
-     options)))
+  (impl/send-stream
+   transport-state
+   (java.io.ByteArrayInputStream. (.getBytes text))
+   destination
+   options))
 
 (defn send-file
+  "Send a file to a remote file."
   [transport-state filepath destination {:keys [mode] :as options}]
-  (context/with-context
-    (format "Send file %s to %s" filepath destination) {}
-    (send-stream
-     transport-state (io/input-stream (io/file filepath)) destination options)))
+  (impl/send-stream
+   transport-state (io/input-stream (io/file filepath)) destination options))
 
-(defprotocol Exec
-  "Execute code over the transport."
-  (exec [transport-state code options]
-    "The code argument should be a map, with an :execv key specifying the
-     command and arguments to be run. If the :in key is specified, it should
-     be a string to attach to the process' stdin. If :in is specified
-     and :execv is nil, then execution should be within a shell.
+(defn receive
+  "Receive data from source file path  and store in destination file path
+  using the transport state."
+  [transport-state source destination]
+  (impl/receive transport-state source destination))
 
-     The `options` map recognises the following keys:
-       :output-f a function to be notified with incremental output.
+;;; # Execute code
 
-     It returns a map with :exit and :out keys."))
+;;; Execute code over the transport.
+(defn exec
+  "The code argument should be a map, with an :execv key specifying the
+  command and arguments to be run. If the :in key is specified, it should
+  be a string to attach to the process' stdin. If :in is specified
+  and :execv is nil, then execution should be within a shell.
 
-(defprotocol PortForward
-  "Forward a port over a transport."
-  (forward-to-local [transport-state remote-port local-port]
-    "Map the target's remote-port to the given local-port")
-  (unforward-to-local [transport-state remote-port local-port]
-    "Unmap the target's remote-port to the given local-port"))
+  The `options` map recognises the following keys:
+    :output-f a function to be notified with incremental output.
+
+  It returns a map with :exit and :out keys."
+  [transport-state code options]
+  (impl/exec transport-state code options))
+
+;;; # Port Forwarding
+;;; Forward a port over a transport.
+(defn forward-to-local
+  "Map the target's remote-port to the given local-port"
+  [transport-state remote-port local-port]
+  (impl/forward-to-local transport-state remote-port local-port))
+
+(defn unforward-to-local
+  "Unmap the target's remote-port to the given local-port"
+  [transport-state remote-port local-port]
+  (impl/unforward-to-local transport-state remote-port local-port))
 
 
 (defmacro with-ssh-tunnel
@@ -135,4 +158,7 @@ Connections can be expensive, so need to be cached and be poolable."
        ~@body
        (finally (close-transport ~name)))))
 
-(defmulti factory (fn [transport-kw options] transport-kw))
+(defmulti factory
+  "Factory for creating transport objects based on a keyword
+  identifying the trasport."
+  (fn [transport-kw options] transport-kw))

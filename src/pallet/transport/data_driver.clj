@@ -7,9 +7,9 @@
 
 (defn exec
   "Execute code based "
-  [{:keys [transport options code endpoint authentication]}]
+  [{:keys [transport options code target]}]
   (let [transport (transport/factory transport options)
-        connection (transport/open transport endpoint authentication options)]
+        connection (transport/open transport target options)]
     (try
       (transport/exec connection code options)
       (finally

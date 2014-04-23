@@ -9,7 +9,4 @@
                :src-linenum-anchor-prefix "L"}
        :aliases {"marg" ["marg" "-d" "doc/0.4/annotated"]
                  "codox" ["doc"]
-                 "doc" ["do" "codox," "marg"]}}
- :release
- {:set-version
-  {:updates [{:path "README.md" :no-snapshot true}]}}}
+                 "doc" ["do" "codox," "marg"]}}}

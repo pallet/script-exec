@@ -17,11 +17,11 @@
   (let [{:keys [exit out]}
         (data-driver/exec
          {:transport :ssh
-          :endpoint {:server "localhost"}
-          :authentication
-          {:user {:private-key-path (ssh-test/default-private-key-path)
-                  :public-key-path (ssh-test/default-public-key-path)
-                  :username (ssh-test/test-username)}}
+          :target
+          [{:endpoint {:server "localhost"}
+            :credentials {:private-key-path (ssh-test/default-private-key-path)
+                          :public-key-path (ssh-test/default-public-key-path)
+                          :username (ssh-test/test-username)}}]
           :code {:in "ls /; exit 0"}})]
     (is (zero? exit))
     (is (re-find #"bin" out))))
