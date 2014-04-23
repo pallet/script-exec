@@ -1,0 +1,12 @@
+language: clojure
+lein: lein2
+before_script:
+- ssh-keygen -N "" -f ~/.ssh/id_rsa
+- cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+- lein2 version
+script: lein2 test
+after_success:
+- lein2 pallet-release push
+env:
+  global:
+    secure: P/i+3kRRTKyUa+mAN4UCf4KMIoB4AdT3hZeDmzdwATYldOtOU4mC/QzC3jI6b6Uf9tXheLb1G6i+VQrd6uhDYDX+KjhHUtQWwry83hB8uJb+cLU5jq/1jIwaTOoDQMmJDtUDlKI0T4MGMDq7VoIaOqNRoA/KwqTZ9K8KNva9ajk=

@@ -1,5 +1,5 @@
 {:dev {:dependencies [[ch.qos.logback/logback-classic "1.0.9"]]
-       :plugins [[lein-set-version "0.3.0"]]}
+       :plugins [[lein-pallet-release "RELEASE"]]}
  :doc {:dependencies [[com.palletops/pallet-codox "0.1.0-SNAPSHOT"]]
        :plugins [[codox/codox.leiningen "0.6.4"]
                  [lein-marginalia "0.7.1"]]
