@@ -6,9 +6,9 @@
    [pallet.transport :as transport]))
 
 (defn test-exec
-  [transport endpoint authorisation options]
+  [transport target options]
   (transport/with-transport [transport transport]
-    (let [t-state (transport/open transport endpoint authorisation options)]
+    (let [t-state (transport/open transport target options)]
       (testing "Default shell"
         (let [result (transport/exec t-state {:in "ls /; exit $?"} nil)]
           (is (zero? (:exit result)))
@@ -38,9 +38,9 @@
           (is (not (zero? (:exit result)))))))))
 
 (defn test-send
-  [transport endpoint authorisation options]
+  [transport target options]
   (transport/with-transport [transport transport]
-    (let [t-state (transport/open transport endpoint authorisation options)]
+    (let [t-state (transport/open transport target options)]
       (testing "send-file"
         (filesystem/with-temp-file [tmp-src "src"]
           (filesystem/with-temp-file [tmp-dest "dest"]
@@ -64,7 +64,7 @@
             t-state "/some/non-existing/path" "/invalid" {})))))))
 
 (defn test-connect-fail
-  [transport endpoint authorisation options]
+  [transport target options]
   (transport/with-transport [transport transport]
-    (let [t-state (transport/open transport endpoint authorisation options)]
+    (let [t-state (transport/open transport target options)]
       (is false "this test is designed to fail on open"))))

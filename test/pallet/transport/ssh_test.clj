@@ -26,29 +26,29 @@
 (deftest exec-test
   (transport-test/test-exec
    (ssh/make-ssh-transport {})
-   {:server "localhost"}
-   {:user {:private-key-path (default-private-key-path)
-           :public-key-path (default-public-key-path)
-           :username (test-username)}}
+   [{:endpoint {:server "localhost"}
+     :credentials {:private-key-path (default-private-key-path)
+                   :public-key-path (default-public-key-path)
+                   :username (test-username)}}]
    nil))
 
 (deftest send-test
   (transport-test/test-send
    (ssh/make-ssh-transport {})
-   {:server "localhost"}
-   {:user {:private-key-path (default-private-key-path)
-           :public-key-path (default-public-key-path)
-           :username (test-username)}}
+   [{:endpoint {:server "localhost"}
+     :credentials {:private-key-path (default-private-key-path)
+                   :public-key-path (default-public-key-path)
+                   :username (test-username)}}]
    nil))
 
 (deftest connection-fail-test
   (is
    (thrown-with-msg?
-     clojure.lang.ExceptionInfo #"SSH connect: server somewhere-non-existent.*"
-     (transport-test/test-connect-fail
-      (ssh/make-ssh-transport {})
-      {:server "somewhere-non-existent"}
-      {:user {:private-key-path (default-private-key-path)
-              :public-key-path (default-public-key-path)
-              :username (test-username)}}
-      {:port-retries 2}))))
+    clojure.lang.ExceptionInfo #"SSH connect: server somewhere-non-existent.*"
+    (transport-test/test-connect-fail
+     (ssh/make-ssh-transport {})
+     [{:endpoint {:server "somewhere-non-existent"}
+       :credentials {:private-key-path (default-private-key-path)
+                     :public-key-path (default-public-key-path)
+                     :username (test-username)}}]
+     {:max-tries 2}))))

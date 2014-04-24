@@ -6,7 +6,7 @@
    clojure.test))
 
 (deftest exec-test
-  (transport-test/test-exec (local/make-local-transport) nil nil nil)
+  (transport-test/test-exec (local/make-local-transport) nil nil)
   ;; (testing "Explicit shell"
   ;;   (let [result (transport/exec
   ;;                 t-state {:execv ["/bin/bash"] :in "ls /"} nil)]
@@ -15,4 +15,4 @@
   )
 
 (deftest send-test
-  (transport-test/test-send (local/make-local-transport) nil nil nil))
+  (transport-test/test-send (local/make-local-transport) nil nil))

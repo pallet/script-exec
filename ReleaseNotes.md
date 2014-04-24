@@ -1,4 +1,8 @@
-# Release Notes
+## 0.5.0
+
+- Add jump-host support
+  Changes open to take a sequence of host maps.  Changes release to take a
+  connection.  Pulls out the cache into the cache-resources project.
 
 ## 0.4.0
 

@@ -7,27 +7,28 @@
    [pallet.common.context :as context]
    [pallet.shell :as shell]
    [pallet.transport :as transport]
+   [pallet.transport.protocols :as impl]
    [pallet.local.transport :as local]))
 
 (deftype LocalTransportState []
-  transport/TransportState
+  impl/TransportState
   (open? [_] true)
   (re-open [_])
   (close [_])
-  transport/Transfer
+  impl/Transfer
   (send-stream [_ source destination options]
     (local/send-stream source destination options))
   (receive [_ source destination]
     (local/send-stream (io/input-stream source) destination {}))
-  transport/Exec
+  impl/Exec
   (exec [transport-state code options]
     (local/exec code options)))
 
 (deftype LocalTransport []
-  transport/Transport
+  impl/Transport
   (connection-based? [_] false)
-  (open [_ endpoint authentication options] (LocalTransportState.))
-  (release [_ endpoint authentication options])
+  (open [_ target options] (LocalTransportState.))
+  (release [_ state])
   (close-transport [_]))
 
 (defn make-local-transport
