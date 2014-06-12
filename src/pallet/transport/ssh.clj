@@ -29,10 +29,10 @@
   (exec [transport-state code options]
     (ssh-transport/exec state code options))
   impl/PortForward
-  (forward-to-local [transport-state remote-port local-port]
-    (ssh-transport/forward-to-local transport-state remote-port local-port))
-  (unforward-to-local [transport-state remote-port local-port]
-    (ssh-transport/unforward-to-local transport-state remote-port local-port)))
+  (forward-to-local [transport-state local-port remote-port remote-host]
+    (ssh-transport/forward-to-local state local-port remote-port remote-host))
+  (unforward-to-local [transport-state local-port]
+    (ssh-transport/unforward-to-local state local-port)))
 
 (defn lookup-or-create-state
   [cache target options]

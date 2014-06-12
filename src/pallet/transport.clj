@@ -105,13 +105,59 @@
 ;;; Forward a port over a transport.
 (defn forward-to-local
   "Map the target's remote-port to the given local-port"
-  [transport-state remote-port local-port]
-  (impl/forward-to-local transport-state remote-port local-port))
+  [transport-state local-port remote-port remote-host]
+  (impl/forward-to-local transport-state local-port remote-port remote-host))
 
 (defn unforward-to-local
   "Unmap the target's remote-port to the given local-port"
-  [transport-state remote-port local-port]
-  (impl/unforward-to-local transport-state remote-port local-port))
+  [transport-state local-port]
+  (impl/unforward-to-local transport-state local-port))
+
+(defn with-ssh-tunnel*
+  "Execute a function within an ssh-tunnel available for the ports
+  given in the tunnels map. Automatically closes port forwards on
+  completion.
+
+   Tunnels should be a map from local ports (integers) to either
+     1) An integer remote port. Remote host is assumed to be \"localhost\".
+     2) A vector of remote host and remote port. eg, [\"yahoo.com\" 80].
+
+   If the local port is 0, an unused port will be assigned.
+
+   The function is called with a single argument, passing a map keyed on
+   host and remote port.
+
+   e.g.
+        (with-ssh-tunnel* session {2222 22}
+          (fn [ports]
+           (let [p (get-in ports [\"localhost\" 22])]
+             ;; do something on p, local port 2222
+             )))"
+  [transport-state tunnels f]
+  {:pre [transport-state (map? tunnels)]}
+  (let [unforward (fn []
+                    (doseq [[lport rport] tunnels]
+                      (try
+                        (unforward-to-local transport-state lport)
+                        (catch Exception e
+                          ;; (logging/warnf
+                          ;;  "Removing Port forward to %s failed: %s"
+                          ;;  lport (.getMessage e))
+                          ))))]
+    (try
+      ;; Set up the port forwards
+      (let [ports (reduce
+                   (fn [ports [lport rspec]]
+                     (let [[rhost rport] (if (sequential? rspec)
+                                           rspec
+                                           ["localhost" rspec])]
+                       (assoc-in ports [rhost rport]
+                                 (forward-to-local
+                                  transport-state lport rport rhost))))
+                   {}
+                   tunnels)]
+        (f ports))
+      (finally (unforward)))))
 
 
 (defmacro with-ssh-tunnel
@@ -126,27 +172,10 @@
         (with-ssh-tunnel session {2222 22}
            ;; do something on local port 2222
            session)"
-  [transport-state tunnels & body]
-  `(let [transport-state# ~transport-state
-         tunnels# ~tunnels
-         unforward# (fn []
-                      (doseq [[lport# rport#] tunnels#]
-                        (try
-                          (transport/unforward-to-local
-                           transport-state# rport# lport#)
-                          (catch Exception e#
-                            (logging/warnf
-                             "Removing Port forward to %s failed: %s"
-                             lport# (.getMessage e#))))))]
-     (try
-       ;; Set up the port forwards
-       (doseq [[lport# rspec#] tunnels#
-               :let [[rhost# rport#] (if (sequential? rspec#)
-                                       rspec#
-                                       ["localhost" rspec#])]]
-         (transport/forward-to-local transport-state# rport# lport#))
-       ~@body
-       (finally (unforward#)))))
+  [transport-state [sym tunnels] & body]
+  `(with-ssh-tunnel* ~transport-state ~tunnels
+     (fn [~sym]
+       ~@body)))
 
 (defmacro with-transport
   "Define a scope where the given name is bound to a transport.

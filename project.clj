@@ -6,5 +6,5 @@
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [com.palletops/cache-resources "0.1.0"]
                  [com.palletops/local-transport "0.5.0"]
-                 [com.palletops/ssh-transport "0.6.0"]
+                 [com.palletops/ssh-transport "0.7.0"]
                  [prismatic/schema "0.2.1"]])

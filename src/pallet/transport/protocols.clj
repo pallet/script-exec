@@ -54,7 +54,7 @@ poolable."
 
 (defprotocol PortForward
   "Forward a port over a transport."
-  (forward-to-local [transport-state remote-port local-port]
+  (forward-to-local [transport-state local-port remote-port remote-host]
     "Map the target's remote-port to the given local-port")
-  (unforward-to-local [transport-state remote-port local-port]
+  (unforward-to-local [transport-state local-port]
     "Unmap the target's remote-port to the given local-port"))
