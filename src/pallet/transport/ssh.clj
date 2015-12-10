@@ -34,10 +34,10 @@
   (exec [transport-state code options]
     (ssh-transport/exec state code options))
   transport/PortForward
-  (forward-to-local [transport-state remote-port local-port]
-    (ssh-transport/forward-to-local transport-state remote-port local-port))
-  (unforward-to-local [transport-state remote-port local-port]
-    (ssh-transport/unforward-to-local transport-state remote-port local-port)))
+  (forward-to-local [transport-state remote-host remote-port local-port]
+    (ssh-transport/forward-to-local state remote-host remote-port local-port))
+  (unforward-to-local [transport-state local-port]
+    (ssh-transport/unforward-to-local state local-port)))
 
 (defn lookup-or-create-state
   [agent cache endpoint authentication options]

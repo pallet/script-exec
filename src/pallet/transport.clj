@@ -85,9 +85,9 @@ Connections can be expensive, so need to be cached and be poolable."
 
 (defprotocol PortForward
   "Forward a port over a transport."
-  (forward-to-local [transport-state remote-port local-port]
+  (forward-to-local [transport-state remote-host remote-port local-port]
     "Map the target's remote-port to the given local-port")
-  (unforward-to-local [transport-state remote-port local-port]
+  (unforward-to-local [transport-state local-port]
     "Unmap the target's remote-port to the given local-port"))
 
 
@@ -109,8 +109,7 @@ Connections can be expensive, so need to be cached and be poolable."
          unforward# (fn []
                       (doseq [[lport# rport#] tunnels#]
                         (try
-                          (transport/unforward-to-local
-                           transport-state# rport# lport#)
+                          (transport/unforward-to-local transport-state# lport#)
                           (catch Exception e#
                             (logging/warnf
                              "Removing Port forward to %s failed: %s"
@@ -121,7 +120,7 @@ Connections can be expensive, so need to be cached and be poolable."
                :let [[rhost# rport#] (if (sequential? rspec#)
                                        rspec#
                                        ["localhost" rspec#])]]
-         (transport/forward-to-local transport-state# rport# lport#))
+         (transport/forward-to-local transport-state# rhost# rport# lport#))
        ~@body
        (finally (unforward#)))))
 
