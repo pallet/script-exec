@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.4.1
+
+- Fix arguments for port forwarding
+
 ## 0.4.0
 
 - Update transports to 0.5.0
