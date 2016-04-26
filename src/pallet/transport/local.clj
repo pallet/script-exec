@@ -27,7 +27,8 @@
   transport/Transport
   (connection-based? [_] false)
   (open [_ endpoint authentication options] (LocalTransportState.))
-  (release [_ endpoint authentication options])
+  (release [_ state endpoint authentication options])
+  (expire [_ endpoint authentication options])
   (close-transport [_]))
 
 (defn make-local-transport

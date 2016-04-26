@@ -43,21 +43,51 @@
      (entryAt [this# k#]
        (impl/lookup this# k#))))
 
+(defn- validate-fifo [cache queue limit]
+  (assert (>= limit (count cache))
+          (str "cache has correct size: " limit " != " (count cache)))
+  (assert (= limit (count queue))
+          (str "queue has correct size: " limit " != " (count cache)))
+  (doseq [k (.seq queue)
+          :when (not= ::free k)]
+    (assert (get cache k) (str "cache missing value for " (pr-str k)))))
+
+(defn- evict
+  "Evict an item from a cache map and queue."
+  [cache queue item]
+  (dosync
+   (let [res (get @cache item)]
+     (when res
+       (alter cache dissoc item)
+       (alter queue #(->> (concat (remove (fn [x] (= item x)) %)
+                                  (repeat ::free))
+                          (take (count @queue))
+                          (into clojure.lang.PersistentQueue/EMPTY)))))))
+
 (defcache FIFOCache [cache queue limit expire-f]
   impl/CacheProtocolImpl
   (lookup
-   [_ item]
-   (get @cache item))
+      [_ item]
+      (dosync
+       (let [res (get @cache item)]
+         (when res
+           (evict cache queue item))
+         res)))
   (lookup
-   [_ item default]
-   (get @cache item default))
+      [_ item default]
+      (dosync
+       (let [res (get @cache item default)]
+         (when res
+           (evict cache queue item))
+         res)))
   (has?
    [_ item]
    (contains? @cache item))
 
   CacheProtocol
-  (miss
-   [_ item result]
+  (miss [_ item result]
+   ;; (assert result)
+   ;; (validate-fifo @cache @queue limit)
    (let [[not-free? v] (dosync
                         (let [k (peek @queue)
                               not-free? (not= ::free k)
@@ -66,13 +96,16 @@
                           (alter queue #(-> % pop (conj item)))
                           [not-free? v]))]
      (when (and expire-f not-free?)
+       (assert v)
        (expire-f v))
+     ;; (validate-fifo @cache @queue limit)
      nil))
 
   (miss [this [item result]] (miss this item result))
 
   (expire-all
    [_]
+   ;; (validate-fifo @cache @queue limit)
    (let [c (dosync
             (let [c @cache]
               (alter
@@ -85,23 +118,24 @@
      (when expire-f
        (doseq [[_ v] c]
          (expire-f v)))
+     ;; (validate-fifo @cache @queue limit)
      nil))
 
   (expire
    [_ item]
+   ;; (validate-fifo @cache @queue limit)
    (let [v (dosync
             (let [v (get @cache item ::miss)]
               (when (not= ::miss v)
-                (alter
-                 queue
-                 (fn [q]
-                   (into clojure.lang.PersistentQueue/EMPTY
-                         (conj (remove (partial = item) q) ::free))))
-                (alter cache dissoc item))
+                (println "expire" v)
+                (evict cache queue item))
+              ;; (validate-fifo @cache @queue limit)
               v))]
      (when (and expire-f (not= v ::miss))
        (expire-f v)))
+   ;; (validate-fifo @cache @queue limit)
    nil)
+
   Object
   (toString [_]
             (str @cache \, \space (pr-str @queue)))
@@ -123,10 +157,11 @@
   java.lang.Iterable
   (iterator [this#] (.iterator ^Iterable @cache)))
 
-(defn make-fifo-cache [& {:keys [cache queue limit expire-f]}]
+(defn make-fifo-cache [& {:keys [cache queue limit expire-f]
+                          :or {limit 10}}]
   (FIFOCache.
    (ref (or cache {}))
    (ref (or queue
             (into clojure.lang.PersistentQueue/EMPTY (repeat limit ::free))))
-   (or limit 10)
+   limit
    expire-f))

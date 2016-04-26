@@ -18,9 +18,12 @@ Connections can be expensive, so need to be cached and be poolable."
   (open [transport endpoint authentication options]
     "Returns a state object for the given endpoint and authentication maps.
      The returned state should (initially) satisfy open?")
-  (release [transport endpoint authentication options]
+  (release [transport transport-state endpoint authentication options]
     "Release any resources for the specified state or endpoint and
-     authentication maps.")
+     authentication maps.  Note that the resources may not be released
+     immediately, to allow for caching and re-use of resources.")
+  (expire [transport endpoint authentication options]
+    "Ensure a resource is not cached.")
   (close-transport [_]
     "Release any resources held by the transport. Does not close any
      transport state objects."))

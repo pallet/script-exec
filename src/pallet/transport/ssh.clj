@@ -53,7 +53,6 @@
                   (ssh-transport/connect
                    agent endpoint authentication options))]
        (logging/debugf "Create ssh transport state: %s" endpoint)
-       (cache/miss cache [endpoint authentication options] state)
        state))))
 
 (defn open [cache endpoint authentication options]
@@ -61,7 +60,11 @@
     (ssh-transport/ssh-user-credentials agent authentication)
     (lookup-or-create-state agent cache endpoint authentication options)))
 
-(defn release [cache endpoint authentication options]
+(defn release [cache state endpoint authentication options]
+  (locking cache
+    (cache/miss cache [endpoint authentication options] state)))
+
+(defn expire [cache endpoint authentication options]
   (locking cache
     (cache/expire cache [endpoint authentication options])))
 
@@ -71,8 +74,10 @@
     true)
   (open [_ endpoint authentication options]
     (open connection-cache endpoint authentication options))
-  (release [_ endpoint authentication options]
-    (release connection-cache endpoint authentication options))
+  (release [_ state endpoint authentication options]
+    (release connection-cache state endpoint authentication options))
+  (expire [_ endpoint authentication options]
+    (expire connection-cache endpoint authentication options))
   (close-transport [_]
     (logging/debug "SSH close-transport")
     (cache/expire-all connection-cache)))
