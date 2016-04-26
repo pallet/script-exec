@@ -1,5 +1,18 @@
 # Release Notes
 
+## 0.4.2
+
+- Remove in use connections from cache
+
+  This addresses several issuse with the caching of ssh connections.  It
+  ensures that in-use connections are removed from the cache, so they do
+  not expire.  This can obviate "Corrupt packet" exceptions from Jsch
+  which occured when an in-use connection was expired.
+
+- Make clojure a provided scope dependency
+
+  Updates to clojure 1.7
+
 ## 0.4.1
 
 - Fix arguments for port forwarding
