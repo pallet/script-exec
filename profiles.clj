@@ -1,4 +1,7 @@
-{:dev {:dependencies [[ch.qos.logback/logback-classic "1.0.9"]]
+{:dev {:dependencies [[ch.qos.logback/logback-classic "1.0.9"]
+                      [org.clojure/clojure "1.7.0"]]
+       :plugins [[lein-set-version "0.3.0"]]}
+ :provided {:dependencies [[org.clojure/clojure "1.7.0"]]
        :plugins [[lein-set-version "0.3.0"]]}
  :doc {:dependencies [[com.palletops/pallet-codox "0.1.0-SNAPSHOT"]]
        :plugins [[codox/codox.leiningen "0.6.4"]
